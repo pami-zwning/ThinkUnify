@@ -1,0 +1,2 @@
+/mnt/afs/mashengnan/o3like/Test_Code/tool_def/math/TIR_project/line_point/SFT_TIR_Math_Line_Point_d251225.jsonl
+/mnt/afs/mashengnan/o3like/Test_Code/tool_def/math/TIR_project/line_point/SFT_TIR_Math_Circle_Point_Euclidean_d151225.jsonl

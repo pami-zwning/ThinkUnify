@@ -1,0 +1,6 @@
+filetype
+langchain-core
+langchain>=1.1.0
+langgraph
+pillow
+psutil

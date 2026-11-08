@@ -1,0 +1,41 @@
+{
+    "agent": {
+        "_class_name": "langchain.agents.create_agent",
+        "model": {
+            "_class_name": "fvg.models.transformers.ChatTransformers",
+            "model_class_name": "Qwen3VLForConditionalGeneration",
+            "model_args": {
+                "pretrained_model_name_or_path": "/mnt/afs/share_data/models_weights/external/Qwen/Qwen3/Qwen3-VL-4B-Thinking",
+                "device_map": "auto",
+                "dtype": "auto"
+            },
+            "processor_class_name": "AutoProcessor",
+            "processor_args": {
+                "pretrained_model_name_or_path": "/mnt/afs/share_data/models_weights/external/Qwen/Qwen3/Qwen3-VL-4B-Thinking",
+                "trust_remote_code": true
+            },
+            "max_new_tokens": 8192
+        },
+        "tools": [
+            {
+                "_class_name": "fvg.tools.image_tool_wrapper.ImageToolWrapper",
+                "name": "crop_image",
+                "underlying_func": {
+                    "_function_name": "fvg.functions.image.crop_image"
+                },
+                "input_parameters": [
+                    "image"
+                ]
+            }
+        ],
+        "checkpointer": {
+            "_class_name": "langgraph.checkpoint.memory.MemorySaver"
+        }
+    },
+    "stream_config": {
+        "configurable": {
+            "thread_id": "main"
+        },
+        "recursion_limit": 8
+    }
+}

@@ -1,0 +1,95 @@
+inter_reason:
+  dataset_names:
+  - UniMMMu_Jigsaw_260204
+  - Pretrain_UniMMMu_Geometry_260202
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 768
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 518
+    min_image_size: 224
+  is_mandatory: true
+  num_used_data:
+  - 20
+  - 118
+  weight: 1
+
+unified_edit:
+  dataset_names:
+  # --- Jigsaw puzzle solving (17.2K) ---
+  - thinkmorph-Jigsaw_Assembly
+  - jigsaw_edit_1x2_1x3
+  - jigsaw_edit_2x2_w_coord_2step_260121
+  # --- Maze navigation (17.9K) ---
+  - SFT_TIR_Maze_Bagel_Single_Step_260121
+  - SFT_Unimmmu_Maze_Single_Step_260121
+  - SFT_VSP_FrozenLakeMaze_Bagel_Single_step_260121
+  - SFT_TIR_Maze_Bagel_Multi_Step_260121
+  - SFT_Unimmmu_Maze_Multi_Step_260121
+  - SFT_VSP_FrozenLakeMaze_Bagel_Multi_step_260121
+  # --- Visual perception (18.6K) ---
+  - thinkmorph-Chart_Refocus
+  - thinkmorph-Visual_Search
+  - localizer
+  - realunify_attentional_focusing_visualcot_gqa_260304
+  # --- Physics & Math (13.5K) ---
+  - MathCanvas_Instruct
+  - Mira_electric_charge_3q
+  - Mira_electric_charge_square
+  - gear_rotation_1_step
+  # --- Geometric reasoning (20.2K, incl. Pretrain_UniMMMu_Geometry in inter_reason) ---
+  # - Unimmmu_geometry_260211
+  # --- 3D spatial reasoning (16.5K) ---
+  - cubes_count_x
+  - cubes_missing_x
+  - mirror_clock
+  - rolling_dice_sum
+  # --- Real world multi-round problem (19.2K) ---
+  - realunify_mt_edit_1_3_1_5_5000_same_10
+  - realunify_mt_edit_multi_step_1_3_1_5_5000_seq_10
+  - RealUnify_MR_260211
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 768
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 518
+    min_image_size: 224
+  is_mandatory: true
+  num_used_data:
+  # Jigsaw puzzle solving (17.2K)
+  - 60
+  - 40
+  - 52
+  # Maze navigation (17.9K)
+  - 44
+  - 10
+  - 49
+  - 44
+  - 11
+  - 20
+  # Visual perception (18.6K)
+  - 60
+  - 70
+  - 50
+  - 6
+  # Physics & Math (13.5K)
+  - 55
+  - 20
+  - 30
+  - 30
+  # Geometric reasoning (20.2K)
+  # - 84
+  # 3D spatial reasoning (16.5K)
+  - 50
+  - 50
+  - 50
+  - 15
+  # Real world multi-round problem (19.2K)
+  - 50
+  - 50
+  - 92
+  weight: 1

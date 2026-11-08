@@ -1,0 +1,38 @@
+{
+    "thinkmorph-Chart_Refocus": {
+        "root": "/mnt/afs/share_data/nijingcheng/ThinkMorph/images/Chart_Refocus",
+        "annotation": "/mnt/afs/nijingcheng/workspace/scripts/data/jsons/mllm/thinkmorph/Chart_Refocus.jsonl",
+        "repeat_time": 1,
+        "data_type": "ceph",
+        "task": "sft",
+        "language": "en",
+        "length": 6000
+    },
+    "thinkmorph-Jigsaw_Assembly": {
+        "root": "/mnt/afs/share_data/nijingcheng/ThinkMorph/images/Jigsaw_Assembly",
+        "annotation": "/mnt/afs/nijingcheng/workspace/scripts/data/jsons/mllm/thinkmorph/Jigsaw_Assembly.jsonl",
+        "repeat_time": 1,
+        "data_type": "ceph",
+        "task": "sft",
+        "language": "en",
+        "length": 6000
+    },
+    "thinkmorph-Visual_Search": {
+        "root": "/mnt/afs/share_data/nijingcheng/ThinkMorph/images/Visual_Search",
+        "annotation": "/mnt/afs/nijingcheng/workspace/scripts/data/jsons/mllm/thinkmorph/Visual_Search.jsonl",
+        "repeat_time": 1,
+        "data_type": "ceph",
+        "task": "sft",
+        "language": "en",
+        "length": 6990
+    },
+    "thinkmorph-Spatial_Navigation": {
+        "root": "/mnt/afs/share_data/nijingcheng/ThinkMorph/images/Spatial_Navigation",
+        "annotation": "/mnt/afs/nijingcheng/workspace/scripts/data/jsons/mllm/thinkmorph/Spatial_Navigation.jsonl",
+        "repeat_time": 1,
+        "data_type": "ceph",
+        "task": "sft",
+        "language": "en",
+        "length": 6000
+    }
+}

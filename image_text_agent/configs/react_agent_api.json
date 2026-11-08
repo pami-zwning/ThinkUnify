@@ -1,0 +1,33 @@
+{
+    "agent": {
+        "_class_name": "langchain.agents.create_agent",
+        "model": {
+            "_class_name": "langchain_openai.ChatOpenAI",
+            "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+            "api_key": "",
+            "model": "doubao-seed-1-6-lite-251015",
+            "temperature": 0.5
+        },
+        "tools": [
+            {
+                "_class_name": "fvg.tools.image_tool_wrapper.ImageToolWrapper",
+                "name": "crop_image",
+                "underlying_func": {
+                    "_function_name": "fvg.functions.image.crop_image"
+                },
+                "input_parameters": [
+                    "image"
+                ]
+            }
+        ],
+        "checkpointer": {
+            "_class_name": "langgraph.checkpoint.memory.MemorySaver"
+        }
+    },
+    "stream_config": {
+        "configurable": {
+            "thread_id": "main"
+        },
+        "recursion_limit": 8
+    }
+}

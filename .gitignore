@@ -1,0 +1,35 @@
+wandb
+__pycache__
+.vscode
+.claude
+CLAUDE.md
+notebooks
+results
+*.ipynb_checkpoints
+*.ipynb
+eval_results
+tests
+.DS_Store
+gradio.sh
+docs
+OUTPUT
+RUN
+paper
+scfm
+
+# Temp/debug files
+list.txt
+tree.txt
+idx_convert_debug.py
+example_reference_prediction.py
+test_*.py
+package.json
+package-lock.json
+*.pdf
+
+# Data/output directories
+LMUData
+vcot
+t2i_outputs
+test_images
+abla

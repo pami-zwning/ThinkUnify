@@ -1,0 +1,1 @@
+python acc.py -r /mnt/afs/mashengnan/o3like/Test_Code/MIRA/results/qwen3vl_sft_d260106

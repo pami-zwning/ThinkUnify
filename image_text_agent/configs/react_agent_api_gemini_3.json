@@ -1,0 +1,27 @@
+{
+    "agent": {
+        "_class_name": "langchain.agents.create_agent",
+        "model": {
+            "_class_name": "langchain_google_genai.ChatGoogleGenerativeAI",
+            "base_url": "https://api.ppchat.vip",
+            "api_key": "",
+            "model": "gemini-3-pro-preview",
+            "temperature": 0.5,
+            "transport": "rest"
+        },
+        "tools": [
+            {
+                "_class_name": "fvg.tools.ipython.InteractivePythonRepl"
+            }
+        ],
+        "checkpointer": {
+            "_class_name": "langgraph.checkpoint.memory.MemorySaver"
+        }
+    },
+    "stream_config": {
+        "configurable": {
+            "thread_id": "main"
+        },
+        "recursion_limit": 8
+    }
+}
