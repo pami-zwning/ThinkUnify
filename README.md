@@ -151,7 +151,7 @@ No datasets are bundled. The code reads data from external paths that you config
 
 Training reads **parquet** datasets registered in [`data/dataset_info.py`](data/dataset_info.py). Each entry specifies a `data_dir` and a `parquet_info_path`. The shipped file contains example absolute paths — **edit `data/dataset_info.py`** so each `data_dir` / `parquet_info_path` points at where you stored the corresponding parquet dataset (or symlink your data to the expected locations).
 
-Which datasets are actually loaded is controlled by the YAML config in [`data/configs/`](data/configs/). The default training config is [`data/configs/three_benchmark_v1_af_amp.yaml`](data/configs/three_benchmark_v1_af_amp.yaml), which selects dataset groups (`inter_reason`, `unified_edit`, …), their `num_used_data`, and sampling `weight`. Change `DATA_YAML` to switch configs.
+Which datasets are actually loaded is controlled by the YAML config in [`data/configs/`](data/configs/). The default training config is [`data/configs/three_benchmark_v1_123k.yaml`](data/configs/three_benchmark_v1_123k.yaml), which selects dataset groups (`inter_reason`, `unified_edit`, …), their `num_used_data`, and sampling `weight`. Change `DATA_YAML` to switch configs.
 
 ```yaml
 # data/configs/<name>.yaml
@@ -206,7 +206,7 @@ bash scripts/thinkunify_train_srun.sh
 | `ENV_PATH` | `YOUR_CONDA_ENV_PATH` | Conda env to activate |
 | `MODEL_PATH` | `YOUR_BAGEL_7B_MOT_PATH` | Base BAGEL-7B-MoT weights |
 | `RESUME_FROM` | `YOUR_RESUME_CKPT_PATH` | Checkpoint to resume / finetune from |
-| `DATA_YAML` | `three_benchmark_v1_af_amp` | Dataset config name (without `.yaml`) |
+| `DATA_YAML` | `three_benchmark_v1_123k` | Dataset config name (without `.yaml`) |
 | `OUTPUT_PATH` / `LOG_PATH` | `<repo>/OUTPUT/<exp>_<ts>` | Checkpoint / log output dirs |
 | `GPU_PER_NODE` / `NNODES` / `RANK` / `MASTER_ADDR` / `MASTER_PORT` | 8 / 1 / 0 / 127.0.0.1 / 29500 | Distributed launch |
 | `ENABLE_QFORMER_DISTILL` | `True` | Enable Q-Proj (Q-Former) VAE→understanding distillation |
@@ -274,7 +274,7 @@ ThinkUnify/
 │   ├── dataset_base.py      # PackedDataset, token packing
 │   ├── dataset_info.py      # DATASET_REGISTRY (edit data paths here)
 │   ├── interleave_datasets/ # Interleaved reasoning / edit / T2I datasets
-│   └── configs/             # YAML dataset configs (three_benchmark_v1_af_amp.yaml, ...)
+│   └── configs/             # YAML dataset configs (three_benchmark_v1_123k.yaml, ...)
 ├── train/
 │   ├── pretrain_unified_navit.py  # Training entry (FSDP)
 │   └── fsdp_utils.py, scfm_utils.py, train_utils.py
