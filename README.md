@@ -73,8 +73,9 @@ Multi-round interleaved generation and understanding. ThinkUnify maintains image
 4. [Training](#training)
 5. [Evaluation](#evaluation)
 6. [Project Structure](#project-structure)
-7. [Citation](#citation)
-8. [License](#license)
+7. [Roadmap](#roadmap)
+8. [Citation](#citation)
+9. [License](#license)
 
 ---
 
@@ -120,14 +121,12 @@ pip install -r image_text_agent/evaluation/VLMEvalKit_Thinkmorph/requirements.tx
 
 ## Model Download
 
-ThinkUnify is built on top of **BAGEL-7B-MoT** and the **ThinkMorph-7B** checkpoint. No weights are bundled in this repository — download them yourself and point the code at them via environment variables.
+ThinkUnify is built on top of **BAGEL-7B-MoT** checkpoint. No weights are bundled in this repository — download them yourself and point the code at them via environment variables.
 
 ```bash
 # BAGEL-7B-MoT base (provides llm_config.json, vit_config.json, ae.safetensors)
 huggingface-cli download ByteDance-Seed/BAGEL-7B-MoT --local-dir ./checkpoints/BAGEL-7B-MoT
 
-# ThinkMorph-7B (used as the resume / finetune checkpoint)
-bash scripts/utils/download_thinkmorph.sh ./checkpoints/ThinkMorph-7B
 ```
 
 Then export the base-config path used by both training and evaluation code:
@@ -138,7 +137,7 @@ export BAGEL_CONFIG_PATH=/abs/path/to/checkpoints/BAGEL-7B-MoT
 
 | Env var | Used by | Meaning |
 |---------|---------|---------|
-| `BAGEL_CONFIG_PATH` | eval (`ThinkMorph.py`), inference demo | Dir with `llm_config.json`, `vit_config.json`, `ae.safetensors` |
+| `BAGEL_CONFIG_PATH` | eval inference demo | Dir with `llm_config.json`, `vit_config.json`, `ae.safetensors` |
 | `MODEL_PATH` | train / eval / demo | Base weights (train) or trained checkpoint dir (eval/demo) |
 | `RESUME_FROM` | train | Checkpoint to resume / finetune from |
 
@@ -192,10 +191,10 @@ The main training entry is [`scripts/thinkunify_train_srun.sh`](scripts/thinkuni
 # Single node, 8 GPUs
 export ENV_PATH=/abs/path/to/conda/envs/thinkunify      # your training conda env
 export MODEL_PATH=/abs/path/to/checkpoints/BAGEL-7B-MoT
-export RESUME_FROM=/abs/path/to/checkpoints/ThinkMorph-7B
+export RESUME_FROM=/abs/path/to/checkpoints/BAGEL-7B-MoT
 export GPU_PER_NODE=8
 export NNODES=1
-export DATA_YAML=three_benchmark_v1_af_amp              # a config in data/configs/
+export DATA_YAML=three_benchmark_v1_123k             # a config in data/configs/
 
 bash scripts/thinkunify_train_srun.sh
 ```
@@ -283,11 +282,11 @@ ThinkUnify/
 ├── scripts/
 │   ├── thinkunify_train_srun.sh        # Training entry
 │   ├── thinkunify_eval_srun_upload.sh  # Evaluation entry
-│   └── utils/                          # download_thinkmorph.sh, parquet tools
+│   └── utils/                          # parquet tools
 ├── image_text_agent/
 │   ├── evaluation/
 │   │   ├── all_benchmark/   # run_bagel.py, inference/, calculate_score/
-│   │   └── VLMEvalKit_Thinkmorph/      # vendored VLMEvalKit + ThinkMorph wrapper
+│   │   └── VLMEvalKit_Thinkmorph/      # vendored VLMEvalKit wrapper
 │   └── tools/               # Agent tool-calling utilities
 ├── assets/                  # Figures used in this README
 ├── requirements.txt
@@ -296,14 +295,22 @@ ThinkUnify/
 
 ---
 
+## Roadmap
+
+- [x] Training and evaluation scripts
+- [ ] Data processing scripts and training data
+- [ ] Model weights
+
+---
+
 ## Citation
 
 ```bibtex
 @article{thinkunify2025,
   title={ThinkUnify: A Unified Multimodal Framework for Multi-Round Visual Understanding and Generation with Efficient Distillation},
-  author={Anonymous},
-  journal={Under Review},
-  year={2025}
+  author={Zhiwei Ning, Bingkun Nian, Xuanang Gao, Jie Yang, Wei Liu},
+  journal={IJCV},
+  year={2026}
 }
 ```
 
