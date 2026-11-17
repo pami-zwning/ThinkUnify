@@ -29,6 +29,12 @@ The MoT backbone processes a packed sequence of text, ViT understanding tokens, 
 
 ---
 
+## Relaese Roadmap
+
+- [x] Training and evaluation scripts
+- [ ] Data processing scripts and training data (coming soon)
+- [ ] Model weights (coming soon)
+
 ## Main Results
 
 ### Interleaved Reasoning (MIRA / UniMMMU / RealUnify)
@@ -295,13 +301,6 @@ ThinkUnify/
 
 ---
 
-## Roadmap
-
-- [x] Training and evaluation scripts
-- [ ] Data processing scripts and training data
-- [ ] Model weights
-
----
 
 ## Citation
 
