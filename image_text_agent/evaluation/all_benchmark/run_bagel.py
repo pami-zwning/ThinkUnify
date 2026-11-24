@@ -14,10 +14,8 @@ from datetime import timedelta
 
 import torch
 import torch.distributed as dist
-from evaluation.all_benchmark.calculate_score import mira, realunify, unimmmu, ai2d, chartqa
-from evaluation.all_benchmark.calculate_score import hrbench, mathvista, mmmu, mmstar, realworldqa
-from evaluation.all_benchmark.calculate_score import vstar, mmvp
-from evaluation.all_benchmark.calculate_score import geneval as geneval_score, t2icompbench as t2icomp_score
+from evaluation.all_benchmark.calculate_score import mira, mathvista
+from evaluation.all_benchmark.calculate_score import geneval as geneval_score
 from evaluation.all_benchmark.infer import read_jsonl_file, read_json_file
 from evaluation.VLMEvalKit_Thinkmorph.vlmeval.vlm.ThinkMorph import ThinkMorph
 
@@ -47,29 +45,14 @@ GENERAL_BENCH_CACHE_ROOT = os.getenv(
 # 路径配置
 ThinkMorph_data = {
     'MIRA': os.path.join(EVAL_DATA_ROOT, 'MIRA', 'processed_data.jsonl'),
-    'Unimmmu': os.path.join(EVAL_DATA_ROOT, 'UniMMMU', 'vqa', 'unimmmu_tool_call.jsonl'),
-    'Unimmmu_direct': os.path.join(EVAL_DATA_ROOT, 'UniMMMU', 'vqa', 'unimmmu_tool_call.jsonl'),
-    'Realunify': os.path.join(EVAL_DATA_ROOT, 'RealUnify', 'GEU_step_processed.jsonl'),
     # General understanding benchmarks (prepared on-demand from HF datasets)
-    'AI2D': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'AI2D', 'test.jsonl'),
-    'ChartQA': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'ChartQA', 'test.jsonl'),
-    'HR-Bench-4K': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'HR-Bench-4K', 'test.jsonl'),
-    'HR-Bench-8K': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'HR-Bench-8K', 'test.jsonl'),
     'MathVista': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'MathVista', 'test.jsonl'),
-    'MMMU': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'MMMU', 'test.jsonl'),
-    'MMStar': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'MMStar', 'test.jsonl'),
-    'RealWorldQA': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'RealWorldQA', 'test.jsonl'),
-    'VStarBench': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'VStarBench', 'test.jsonl'),
-    'MMVP': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'MMVP', 'test.jsonl'),
     # T2I generation benchmarks
     'GenEval': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'GenEval', 'test.jsonl'),
-    'T2I-CompBench': os.path.join(GENERAL_BENCH_CACHE_ROOT, 'T2I-CompBench', 'test.jsonl'),
 }
 
 # Tasks that do not generate images (skip gen_image, save no output images).
-GENERAL_TASKS = {"AI2D", "ChartQA", "HR-Bench-4K", "HR-Bench-8K",
-                            "MathVista", "MMMU", "MMStar", "RealWorldQA",
-                            "VStarBench", "MMVP", "GenEval", "T2I-CompBench"}
+GENERAL_TASKS = {"MathVista", "GenEval"}
 
 
 def ensure_general_benchmark_data(task):
@@ -81,42 +64,12 @@ def ensure_general_benchmark_data(task):
     rank = dist.get_rank() if dist.is_initialized() else 0
     if rank == 0:
         image_cache_dir = os.path.join(os.path.dirname(data_path), 'images')
-        if task == 'AI2D':
-            from evaluation.all_benchmark.inference.ai2d import prepare_ai2d_jsonl
-            prepare_ai2d_jsonl(data_path, image_cache_dir)
-        elif task == 'ChartQA':
-            from evaluation.all_benchmark.inference.chartqa import prepare_chartqa_jsonl
-            prepare_chartqa_jsonl(data_path, image_cache_dir)
-        elif task == 'HR-Bench-4K':
-            from evaluation.all_benchmark.inference.hrbench import prepare_hrbench_jsonl
-            prepare_hrbench_jsonl(data_path, image_cache_dir, split='hrbench_4k')
-        elif task == 'HR-Bench-8K':
-            from evaluation.all_benchmark.inference.hrbench import prepare_hrbench_jsonl
-            prepare_hrbench_jsonl(data_path, image_cache_dir, split='hrbench_8k')
-        elif task == 'MathVista':
+        if task == 'MathVista':
             from evaluation.all_benchmark.inference.mathvista import prepare_mathvista_jsonl
             prepare_mathvista_jsonl(data_path, image_cache_dir)
-        elif task == 'MMMU':
-            from evaluation.all_benchmark.inference.mmmu import prepare_mmmu_jsonl
-            prepare_mmmu_jsonl(data_path, image_cache_dir)
-        elif task == 'MMStar':
-            from evaluation.all_benchmark.inference.mmstar import prepare_mmstar_jsonl
-            prepare_mmstar_jsonl(data_path, image_cache_dir)
-        elif task == 'RealWorldQA':
-            from evaluation.all_benchmark.inference.realworldqa import prepare_realworldqa_jsonl
-            prepare_realworldqa_jsonl(data_path, image_cache_dir)
-        elif task == 'VStarBench':
-            from evaluation.all_benchmark.inference.vstar import prepare_vstar_jsonl
-            prepare_vstar_jsonl(data_path, image_cache_dir)
-        elif task == 'MMVP':
-            from evaluation.all_benchmark.inference.mmvp import prepare_mmvp_jsonl
-            prepare_mmvp_jsonl(data_path, image_cache_dir)
         elif task == 'GenEval':
             from evaluation.all_benchmark.inference.geneval import prepare_geneval_jsonl
             prepare_geneval_jsonl(data_path, image_cache_dir)
-        elif task == 'T2I-CompBench':
-            from evaluation.all_benchmark.inference.t2icompbench import prepare_t2icompbench_jsonl
-            prepare_t2icompbench_jsonl(data_path, image_cache_dir)
     if dist.is_initialized():
         local_rank = int(os.environ.get("LOCAL_RANK", "0"))
         dist.barrier(device_ids=[local_rank])
@@ -228,51 +181,14 @@ def main():
             # worker_args = [(item, task_args) for item in remaining]
 
             
-            if task.split("_")[0] == 'Realunify':
-                from evaluation.all_benchmark.inference.realunify import bagel_pipeline_step
-                process_function = bagel_pipeline_step
-            elif task.split("_")[0] == 'MIRA':
+            if task.split("_")[0] == 'MIRA':
                 from evaluation.all_benchmark.inference.mira import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task.split("_")[0] == 'Unimmmu':
-                if task == 'Unimmmu_direct':
-                    from evaluation.all_benchmark.inference.unimmmu import bagel_pipeline_direct
-                    process_function = bagel_pipeline_direct
-                elif task == 'Unimmmu':
-                    from evaluation.all_benchmark.inference.unimmmu import bagel_pipeline_step
-                    process_function = bagel_pipeline_step
-            elif task == 'AI2D':
-                from evaluation.all_benchmark.inference.ai2d import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'ChartQA':
-                from evaluation.all_benchmark.inference.chartqa import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task in ('HR-Bench-4K', 'HR-Bench-8K'):
-                from evaluation.all_benchmark.inference.hrbench import bagel_pipeline
                 process_function = bagel_pipeline
             elif task == 'MathVista':
                 from evaluation.all_benchmark.inference.mathvista import bagel_pipeline
                 process_function = bagel_pipeline
-            elif task == 'MMMU':
-                from evaluation.all_benchmark.inference.mmmu import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'MMStar':
-                from evaluation.all_benchmark.inference.mmstar import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'RealWorldQA':
-                from evaluation.all_benchmark.inference.realworldqa import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'VStarBench':
-                from evaluation.all_benchmark.inference.vstar import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'MMVP':
-                from evaluation.all_benchmark.inference.mmvp import bagel_pipeline
-                process_function = bagel_pipeline
             elif task == 'GenEval':
                 from evaluation.all_benchmark.inference.geneval import bagel_pipeline
-                process_function = bagel_pipeline
-            elif task == 'T2I-CompBench':
-                from evaluation.all_benchmark.inference.t2icompbench import bagel_pipeline
                 process_function = bagel_pipeline
             else:
                 raise ValueError(f"Unknown task: {task}")
@@ -358,42 +274,12 @@ def main():
             print('*'*30)
             print(f'{task} score:')
             
-            if task == 'VSP':
-                pass
-                # vsp.calculate_score(save_path)
-            elif task == 'TIR':
-                pass
-                # tir.calculate_score(save_path, world_size)
-            elif task.split("_")[0] == 'MIRA':
+            if task.split("_")[0] == 'MIRA':
                 mira.calculate_score(save_path)
-            elif task.split("_")[0] == 'Realunify':
-                realunify.calculate_score(save_path)
-            elif task.split("_")[0] == 'Unimmmu':
-                unimmmu.calculate_score(save_path, False, os.path.join(args.result_path, task))
-            elif task == 'AI2D':
-                ai2d.calculate_score(save_path)
-            elif task == 'ChartQA':
-                chartqa.calculate_score(save_path)
-            elif task == 'HR-Bench-4K':
-                hrbench.calculate_score_4k(save_path)
-            elif task == 'HR-Bench-8K':
-                hrbench.calculate_score_8k(save_path)
             elif task == 'MathVista':
                 mathvista.calculate_score(save_path)
-            elif task == 'MMMU':
-                mmmu.calculate_score(save_path)
-            elif task == 'MMStar':
-                mmstar.calculate_score(save_path)
-            elif task == 'RealWorldQA':
-                realworldqa.calculate_score(save_path)
-            elif task == 'VStarBench':
-                vstar.calculate_score(save_path)
-            elif task == 'MMVP':
-                mmvp.calculate_score(save_path)
             elif task == 'GenEval':
                 geneval_score.calculate_score(save_path)
-            elif task == 'T2I-CompBench':
-                t2icomp_score.calculate_score(save_path)
 
 
 if __name__ == "__main__":

@@ -11,19 +11,20 @@ set -x
 
 # 1. Core model path (override via env var MODEL_PATH when needed).
 #    Point this at your trained checkpoint directory, e.g. .../ckpt/0010000
-MODEL_PATH="${MODEL_PATH:-YOUR_MODEL_PATH/ckpt/xxxstep}"
-
-# 2. Base config for 8GPUS
+# MODEL_PATH="${MODEL_PATH:-YOUR_MODEL_PATH/ckpt/xxxstep}"
+MODEL_PATH="${MODEL_PATH:-/apdcephfs_zwfy12/share_303204533/lukening/code/ThinkUnify/OUTPUT/model_ckpt_output/ckpt/0004000}"
+BAGEL_MODEL_PATH="${BAGEL_MODEL_PATH:-/apdcephfs_zwfy12/share_303204533/lukening/model/BAGEL-7B-MoT}"
+EVAL_DATA_ROOT="${EVAL_DATA_ROOT:-/apdcephfs_cq5/share_300600172/lukening/data/ThinkUnify_eval}"
+# 2. Base config: GPUs per node / node count / run timestamp
 GPUS=${GPUS:-8}
 NODES=${NODES:-1}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# 3. Paths — repo root auto-detected from this script's location.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-${REPO_ROOT}/image_text_agent}"
 
-# 4. Tasks (default: RealUnify ChartQA, override by passing as args)
-ALL_TASKS="RealUnify ChartQA"
+# 4. Tasks (default: the three open-sourced benchmarks; override by passing as args)
+ALL_TASKS="MIRA GenEval MathVista"
 TASKS="${@:-${ALL_TASKS}}"
 
 export ANCHOR_GEN=1
@@ -32,7 +33,8 @@ NUM_TIMESTEPS=${NUM_TIMESTEPS:-30}
 # 6. CFG-Zero* + APG (generation-only, rarely relevant for understanding)
 
 
-# 7. Q-Former (important for distilled understanding models)
+# 7. Q-Former (important for distilled understanding models), enabled in Train and disabled in Eval
+export ENABLE_QFORMER_DISTILL=${ENABLE_QFORMER_DISTILL:-0}
 export QFORMER_NUM_LAYERS=${QFORMER_NUM_LAYERS:-4}
 export QFORMER_NUM_HEADS=${QFORMER_NUM_HEADS:-16}
 export QFORMER_ALPHA=${QFORMER_ALPHA:-1.0}
@@ -44,6 +46,10 @@ export QFORMER_NUM_SA_BLOCKS=${QFORMER_NUM_SA_BLOCKS:-9}
 CKPT_STEP=$(basename "${MODEL_PATH}")
 EXP_NAME=$(basename "$(dirname "$(dirname "${MODEL_PATH}")")")
 MODEL_NAME="${EXP_NAME}_step${CKPT_STEP}_EVAL"
+# Exported so the child process (run_bagel.py / ThinkMorph.py) picks it up via
+# os.environ.get('BAGEL_CONFIG_PATH'); otherwise it falls back to a placeholder.
+export BAGEL_CONFIG_PATH="${BAGEL_MODEL_PATH}"
+export EVAL_DATA_ROOT="${EVAL_DATA_ROOT}"
 
 THINKUNIFY_ROOT=$(dirname "$PROJECT_ROOT")
 SAVE_DIR="${THINKUNIFY_ROOT}/RUN/${MODEL_NAME}"
@@ -64,7 +70,8 @@ mkdir -p "$SAVE_DIR"
 
 # ================= Environment =================
 # Path to the python interpreter of your evaluation conda env.
-PYTHON_EXE="${PYTHON_EXE:-python}"
+# PYTHON_EXE="${PYTHON_EXE:-thinkunify_eval_env}"
+PYTHON_EXE="${PYTHON_EXE:-/apdcephfs_zwfy12/share_303204533/lukening/conda/envs/thinkunify-eval/bin/python}"
 echo "Using Python: $PYTHON_EXE"
 
 export PYTHONPATH=${PROJECT_ROOT}:$PYTHONPATH

@@ -29,21 +29,14 @@ The MoT backbone processes a packed sequence of text, ViT understanding tokens, 
 
 ---
 
-## Relaese Roadmap
+## Release Roadmap
 
 - [x] Training and evaluation scripts
-- [ ] Data processing scripts and training data (coming soon)
+- [x] Data processing / layout instructions (see [Data Download](#data-download))
+- [ ] Training data release (coming soon)
 - [ ] Model weights (coming soon)
 
 ## Main Results
-
-### Interleaved Reasoning (MIRA / UniMMMU / RealUnify)
-
-| Model | MIRA | UniMMMU Avg | RealUnify Avg | Overall |
-|-------|------|-------------|---------------|---------|
-| BAGEL-7B | 8.8 | 22.8 | 33.3 | 21.6 |
-| ThinkMorph-7B | 11.4 | 25.5 | 33.3 | 23.4 |
-| **ThinkUnify (Ours)** | **13.6** | **35.0** | **34.8** | **27.8** |
 
 ### General Multimodal Understanding
 
@@ -58,6 +51,13 @@ The MoT backbone processes a packed sequence of text, ViT understanding tokens, 
 |-------|--------|-----|----------|--------|----------|-------------|---------|
 | BAGEL | 100 | 96 | 76 | 86 | 52 | 68 | 81 |
 | **ThinkUnify** | 99 | 95 | **91** | **88** | **60** | **75** | **85** |
+
+### Interleaved Reasoning (MIRA / UniMMMU / RealUnify)
+
+| Model | MIRA | UniMMMU Avg | RealUnify Avg | Overall |
+|-------|------|-------------|---------------|---------|
+| BAGEL-7B | 8.8 | 22.8 | 33.3 | 21.6 |
+| **ThinkUnify (Ours)** | **13.6** | **35.0** | **34.8** | **27.8** |
 
 ---
 
@@ -79,7 +79,7 @@ Multi-round interleaved generation and understanding. ThinkUnify maintains image
 4. [Training](#training)
 5. [Evaluation](#evaluation)
 6. [Project Structure](#project-structure)
-7. [Roadmap](#roadmap)
+7. [Roadmap](#release-roadmap)
 8. [Citation](#citation)
 9. [License](#license)
 
@@ -87,9 +87,9 @@ Multi-round interleaved generation and understanding. ThinkUnify maintains image
 
 ## Environment Setup
 
-ThinkUnify uses **two separate environments**: one for training/inference and one for the evaluation harness (which vendors VLMEvalKit with extra dependencies). You may also use a single environment if you install the union of the requirements.
+ThinkUnify uses **two separate environments**: one for training and one for the evaluation harness (which vendors VLMEvalKit with extra dependencies). You may also use a single environment if you install the union of the requirements.
 
-### 1. Training & Inference environment
+### 1. Training environment
 
 ```bash
 conda create -n thinkunify python=3.10 -y
@@ -125,7 +125,7 @@ pip install -r image_text_agent/evaluation/VLMEvalKit_Thinkmorph/requirements.tx
 
 ---
 
-## Model Download
+## Basic Model Download
 
 ThinkUnify is built on top of **BAGEL-7B-MoT** checkpoint. No weights are bundled in this repository — download them yourself and point the code at them via environment variables.
 
@@ -155,9 +155,9 @@ No datasets are bundled. The code reads data from external paths that you config
 
 ### Training data
 
-Training reads **parquet** datasets registered in [`data/dataset_info.py`](data/dataset_info.py). Each entry specifies a `data_dir` and a `parquet_info_path`. The shipped file contains example absolute paths — **edit `data/dataset_info.py`** so each `data_dir` / `parquet_info_path` points at where you stored the corresponding parquet dataset (or symlink your data to the expected locations).
+Training reads **parquet** datasets registered in [`data/dataset_info.py`](data/dataset_info.py). Each registered dataset maps to a `data_dir` (holding `chunk_*.parquet` shards) and a `parquet_info_path` (a `*_parquet_summary.json`). The shipped file contains example absolute paths — **edit `data/dataset_info.py`** so each `data_dir` / `parquet_info_path` points at where you stored the corresponding parquet dataset (or symlink your data into one directory, see below).
 
-Which datasets are actually loaded is controlled by the YAML config in [`data/configs/`](data/configs/). The default training config is [`data/configs/three_benchmark_v1_123k.yaml`](data/configs/three_benchmark_v1_123k.yaml), which selects dataset groups (`inter_reason`, `unified_edit`, …), their `num_used_data`, and sampling `weight`. Change `DATA_YAML` to switch configs.
+Which datasets are actually loaded is controlled by the YAML config in [`data/configs/`](data/configs/). The default training config is [`data/configs/three_benchmark_v1_123k.yaml`](data/configs/three_benchmark_v1_123k.yaml) — the **123K interleaved-reasoning SFT set** — which selects dataset groups (`inter_reason`, `unified_edit`), their member `dataset_names`, `num_used_data`, and sampling `weight`. Change `DATA_YAML` to switch configs.
 
 ```yaml
 # data/configs/<name>.yaml
@@ -168,24 +168,35 @@ dataset_group:
   image_transform_args: {max_image_size: 768, min_image_size: 512}
 ```
 
+> **Tip — collect one config's datasets in a single folder.** Only the datasets *named in your chosen YAML* are needed (commented-out entries are ignored). You can gather exactly those into one directory by name, e.g. symlinking each `data_dir` from `data/dataset_info.py`:
+>
+> ```bash
+> mkdir -p /path/to/ThinkUnify_train_dataset
+> # for every dataset_name listed in data/configs/three_benchmark_v1_123k.yaml,
+> # link its data_dir (from data/dataset_info.py) into the folder under its own name:
+> ln -s <data_dir_of_dataset> /path/to/ThinkUnify_train_dataset/<dataset_name>
+> ```
+>
+> Then point the `data_dir` / `parquet_info_path` entries in `data/dataset_info.py` at `/path/to/ThinkUnify_train_dataset/<dataset_name>`.
+
 ### Evaluation data
 
-Interleaved-reasoning benchmarks (RealUnify / MIRA / Uni-MMMU) read JSONL files under a single root. Point `EVAL_DATA_ROOT` at it:
+The open-sourced evaluation covers **three benchmarks: MIRA, GenEval, and MathVista**.
 
-```bash
-export EVAL_DATA_ROOT=/abs/path/to/ThinkUnify_eval
-# Expected layout:
-#   $EVAL_DATA_ROOT/RealUnify/GEU_step_processed.jsonl
-#   $EVAL_DATA_ROOT/MIRA/processed_data.jsonl
-#   $EVAL_DATA_ROOT/UniMMMU/vqa/unimmmu_tool_call.jsonl
-#   $EVAL_DATA_ROOT/general_benchmark_cache/...   (auto-populated, see below)
-```
+- **MIRA** (interleaved reasoning) reads a JSONL file under `EVAL_DATA_ROOT`:
 
-General understanding benchmarks (AI2D, ChartQA, MathVista, MMMU, MMStar, RealWorldQA, VStarBench, MMVP, …) are **prepared on first run** from HuggingFace datasets and cached under `GENERAL_BENCH_CACHE_ROOT` (defaults to `$EVAL_DATA_ROOT/general_benchmark_cache`). Ensure the machine has network access to HuggingFace, or override:
+  ```bash
+  export EVAL_DATA_ROOT=/abs/path/to/ThinkUnify_eval
+  # expected: $EVAL_DATA_ROOT/MIRA/processed_data.jsonl
+  ```
 
-```bash
-export GENERAL_BENCH_CACHE_ROOT=/abs/path/to/general_benchmark_cache
-```
+- **MathVista** and **GenEval** are **prepared on first run** from HuggingFace datasets and cached under `GENERAL_BENCH_CACHE_ROOT` (defaults to `$EVAL_DATA_ROOT/general_benchmark_cache`). Ensure the machine has network access to HuggingFace, or override:
+
+  ```bash
+  export GENERAL_BENCH_CACHE_ROOT=/abs/path/to/general_benchmark_cache
+  ```
+
+> **GenEval scoring** optionally uses the official Mask2Former pipeline (set `GENEVAL_PYTHON` to a python env with `mmdet`/`mmcv`/`open_clip`/`clip_benchmark`) and falls back to a vendored CLIP ViT-B/32 proxy otherwise. See [`image_text_agent/evaluation/all_benchmark/calculate_score/geneval.py`](image_text_agent/evaluation/all_benchmark/calculate_score/geneval.py).
 
 ---
 
@@ -232,7 +243,7 @@ Checkpoints are written to `$OUTPUT_PATH/ckpt/`, and W&B runs offline by default
 
 ## Evaluation
 
-The evaluation entry is [`scripts/thinkunify_eval_srun_upload.sh`](scripts/thinkunify_eval_srun_upload.sh). It runs `image_text_agent/evaluation/all_benchmark/run_bagel.py` through the vendored VLMEvalKit.
+The evaluation entry is [`scripts/thinkunify_eval_srun.sh`](scripts/thinkunify_eval_srun.sh). It runs `image_text_agent/evaluation/all_benchmark/run_bagel.py` through the vendored VLMEvalKit.
 
 ```bash
 export MODEL_PATH=/abs/path/to/OUTPUT/<exp>/ckpt/0010000   # trained checkpoint dir
@@ -241,11 +252,11 @@ export EVAL_DATA_ROOT=/abs/path/to/ThinkUnify_eval
 export PYTHON_EXE=/abs/path/to/conda/envs/thinkunify_eval/bin/python
 export GPUS=8
 
-# Tasks are passed as args (default: "RealUnify ChartQA")
-bash scripts/thinkunify_eval_srun_upload.sh RealUnify ChartQA MIRA Unimmmu
+# Tasks are passed as args (default: "MIRA GenEval MathVista")
+bash scripts/thinkunify_eval_srun.sh MIRA GenEval MathVista
 ```
 
-Supported tasks include: `RealUnify`, `MIRA`, `Unimmmu`, `Unimmmu_direct`, `AI2D`, `ChartQA`, `MathVista`, `MMMU`, `MMStar`, `RealWorldQA`, `HR-Bench-4K`, `HR-Bench-8K`, `MMVP`, `VStarBench`, `GenEval`, `T2I-CompBench`.
+Supported tasks: `MIRA`, `GenEval`, `MathVista`.
 
 ### Relevant env vars
 
@@ -262,7 +273,7 @@ Supported tasks include: `RealUnify`, `MIRA`, `Unimmmu`, `Unimmmu_direct`, `AI2D
 
 Results and logs are written under `<repo>/RUN/<model_name>/`.
 
-> **Optional LLM-as-judge.** Some benchmarks (e.g. MathVista, Uni-MMMU scoring) can use a GPT/Gemini judge. Provide your own credentials via environment variables (`AZURE_OPENAI_API_KEY`, `GEMINI_API_HOST`, `GEMINI_SECRET_ID`, `GEMINI_SECRET_KEY`, etc.). No credentials ship in this repo.
+> **Optional LLM-as-judge.** MathVista scoring can use a GPT/Gemini judge. Provide your own credentials via environment variables (`AZURE_OPENAI_API_KEY`, `GEMINI_API_HOST`, `GEMINI_SECRET_ID`, `GEMINI_SECRET_KEY`, etc.). No credentials ship in this repo.
 
 ---
 
@@ -287,11 +298,11 @@ ThinkUnify/
 ├── inferencer.py            # Multi-round interleaved inference (InterleaveInferencer)
 ├── scripts/
 │   ├── thinkunify_train_srun.sh        # Training entry
-│   ├── thinkunify_eval_srun_upload.sh  # Evaluation entry
-│   └── utils/                          # parquet tools
+│   ├── thinkunify_eval_srun.sh         # Evaluation entry
+│   └── utils/                          # parquet tools, model download
 ├── image_text_agent/
 │   ├── evaluation/
-│   │   ├── all_benchmark/   # run_bagel.py, inference/, calculate_score/
+│   │   ├── all_benchmark/   # run_bagel.py, inference/ + calculate_score/ (MIRA, GenEval, MathVista)
 │   │   └── VLMEvalKit_Thinkmorph/      # vendored VLMEvalKit wrapper
 │   └── tools/               # Agent tool-calling utilities
 ├── assets/                  # Figures used in this README
